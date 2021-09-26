@@ -137,96 +137,6 @@ static void CallbackMouseMain(int32_t event, int32_t x, int32_t y, int32_t flags
 }
 
 
-static void TreatKeyInputMain(std::unique_ptr<ImageProcessorIf>& image_processor, int32_t key, cv::VideoCapture& cap)
-{
-    static constexpr float kIncPosPerFrame = 0.8f;
-    float f;
-    std::array<float, 3> real_rvec;
-    std::array<float, 3> real_tvec;
-    std::array<float, 3> top_rvec;
-    std::array<float, 3> top_tvec;
-    image_processor->GetCameraParameter(f, real_rvec, real_tvec, top_rvec, top_tvec);
-
-    is_process_one_frame = false;
-    bool is_key_pressed = true;
-    key &= 0xFF;
-    switch (key) {
-    case 'w':
-        top_tvec[2] -= kIncPosPerFrame;
-        break;
-    case 'W':
-        top_tvec[2] -= kIncPosPerFrame * 3;
-        break;
-    case 's':
-        top_tvec[2] += kIncPosPerFrame;
-        break;
-    case 'S':
-        top_tvec[2] += kIncPosPerFrame * 3;
-        break;
-    case 'a':
-        top_tvec[0] += kIncPosPerFrame;
-        break;
-    case 'A':
-        top_tvec[0] += kIncPosPerFrame * 3;
-        break;
-    case 'd':
-        top_tvec[0] -= kIncPosPerFrame;
-        break;
-    case 'D':
-        top_tvec[0] -= kIncPosPerFrame * 3;
-        break;
-    case 'z':
-        top_tvec[1] += kIncPosPerFrame;
-        break;
-    case 'Z':
-        top_tvec[1] += kIncPosPerFrame * 3;
-        break;
-    case 'x':
-        top_tvec[1] -= kIncPosPerFrame;
-        break;
-    case 'X':
-        top_tvec[1] -= kIncPosPerFrame * 3;
-        break;
-    case 'q':
-        top_rvec[2] += 0.1f;
-        break;
-    case 'e':
-        top_rvec[2] -= 0.1f;
-        break;
-    default:
-        is_key_pressed = false;
-        switch (key) {
-        case 'p':
-            is_pause = !is_pause;
-            break;
-        case '>':
-            if (is_pause) {
-                is_process_one_frame = true;
-            } else {
-                int32_t current_frame = static_cast<int32_t>(cap.get(cv::CAP_PROP_POS_FRAMES));
-                cap.set(cv::CAP_PROP_POS_FRAMES, current_frame + 100);
-            }
-            break;
-        case '<':
-            int32_t current_frame = static_cast<int32_t>(cap.get(cv::CAP_PROP_POS_FRAMES));
-            if (is_pause) {
-                is_process_one_frame = true;
-                cap.set(cv::CAP_PROP_POS_FRAMES, current_frame - 2);
-            } else {
-                cap.set(cv::CAP_PROP_POS_FRAMES, current_frame - 100);
-            }
-            break;
-        }
-        break;
-    }
-
-    if (is_key_pressed) {
-        image_processor->SetCameraParameter(f, real_rvec, real_tvec, top_rvec, top_tvec);
-    }
-}
-
-
-
 int main(int argc, char* argv[])
 {
     /*** Initialize ***/
@@ -316,7 +226,6 @@ int main(int argc, char* argv[])
         /* Key input */
         int32_t key = cv::waitKey(1);
         if (key == 27) break;   /* ESC to quit */
-        TreatKeyInputMain(image_processor, key, cap);
 
         /* Print processing time */
         const auto& time_all1 = std::chrono::steady_clock::now();
